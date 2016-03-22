@@ -27,7 +27,26 @@ module.exports = {
 			return tally;
 		}
 
+		const wwDice = (tally, current) => {
+			if (current > 7) {
+				return tally+1;
+			} else {
+				return tally;
+			}
+		}
+
+		const scionDice = (tally, current) => {
+			if (current == 10) {
+				return tally + 2;
+			} else if (current > 6) {
+				return tally + 1;
+			} else {
+				return tally;
+			}
+		}
+
 		return new Promise((resolve, reject) => {
+			const modeEnum = module.exports.mode;
 			let parts = dice.split(/d/, 2);
 			let left = parts[0];
 			let right = parts[1];
@@ -44,14 +63,22 @@ module.exports = {
 
 			let summation;
 
-			if (mode == module.exports.mode.FATE) {
+			if (mode == modeEnum.FATE) {
 				summation = fateDice;
+			} else if (mode == modeEnum.WW) {
+				summation = wwDice;
+			} else if (mode == modeEnum.SCION) {
+				summation = scionDice;
 			} else {
 				summation = sumDice;
 			}
 
 			for(let i = 0; i < left; i++) {
-			 	rolls.push(Math.random() * right);
+				let current = Math.random() * right;
+			 	rolls.push(current);
+			 	if (mode == modeEnum.WW && current == 10) {
+			 		left++;
+			 	}
 			}
 
 			let retVal = {

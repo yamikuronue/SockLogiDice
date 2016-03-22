@@ -14,7 +14,7 @@ describe('Logios Dice for SockBot', () => {
 		sandbox.restore();
 	});
 	
-	describe('Roll()', () => {
+	describe('Roll() in summation mode', () => {
 		
 		it("should roll one die", () => {
 			sandbox.stub(Math, 'random').returns(3/6);
@@ -80,7 +80,9 @@ describe('Logios Dice for SockBot', () => {
 			- 3,4 = 0
 			- 5, 6 = +1
 		*/
-	
+	});
+
+	describe('Roll() in fate mode', () => {
 		it("should roll 1dF", () => {
 			sandbox.stub(Math, 'random').returns(3/6);
 			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
@@ -102,6 +104,83 @@ describe('Logios Dice for SockBot', () => {
 			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
 				rolls: [5],
 				result: 1
+			});
+		});
+	});
+	describe('Roll() in white wolf mode', () => {
+		/*
+			White Wolf mode rolls a d10, 
+			and on 8, 9, or 10, it adds one to the 'success' count.
+		 */
+		it("should return 0 successes for three 6s", () => {
+			sandbox.stub(Math, 'random').returns(6/10);
+			return expect(logiDice.roll("3d10", logiDice.mode.WW)).to.eventually.deep.equal({
+				rolls: [6, 6, 6],
+				result: 0
+			});
+		});
+
+		it("should return 0 successes for three 7s", () => {
+			sandbox.stub(Math, 'random').returns(7/10);
+			return expect(logiDice.roll("3d10", logiDice.mode.WW)).to.eventually.deep.equal({
+				rolls: [7, 7, 7],
+				result: 0
+			});
+		});
+
+		it("should return 3 successes for three 8s", () => {
+			sandbox.stub(Math, 'random').returns(8/10);
+			return expect(logiDice.roll("3d10", logiDice.mode.WW)).to.eventually.deep.equal({
+				rolls: [8, 8, 8],
+				result: 3
+			});
+		});
+
+		/*Added wrinkle: on a 10, white wolf adds another die to roll*/
+		it("should return 3 successes for two dice with a 10", () => {
+			sandbox.stub(Math, 'random').onFirstCall().returns(9/10).onSecondCall().returns(10/10).onThirdCall().returns(9/10);
+			return expect(logiDice.roll("2d10", logiDice.mode.WW)).to.eventually.deep.equal({
+				rolls: [9, 10, 9],
+				result: 3
+			});
+		});
+	});
+	describe('Roll() in scion mode', () => {
+		/*
+			Scion mode is like White wolf dice, for the most part
+			7s count as a success,
+			and instead of exploding 10s, they count as 2 successes
+		 */
+		it("should return 0 successes for three 6s", () => {
+			sandbox.stub(Math, 'random').returns(6/10);
+			return expect(logiDice.roll("3d10", logiDice.mode.SCION)).to.eventually.deep.equal({
+				rolls: [6, 6, 6],
+				result: 0
+			});
+		});
+
+		it("should return 3 successes for three 7s", () => {
+			sandbox.stub(Math, 'random').returns(7/10);
+			return expect(logiDice.roll("3d10", logiDice.mode.SCION)).to.eventually.deep.equal({
+				rolls: [7, 7, 7],
+				result: 3
+			});
+		});
+
+		it("should return 3 successes for three 8s", () => {
+			sandbox.stub(Math, 'random').returns(8/10);
+			return expect(logiDice.roll("3d10", logiDice.mode.SCION)).to.eventually.deep.equal({
+				rolls: [8, 8, 8],
+				result: 3
+			});
+		});
+
+		/*Added wrinkle: on a 10, white wolf adds another die to roll*/
+		it("should return 3 successes for two dice with a 10", () => {
+			sandbox.stub(Math, 'random').onFirstCall().returns(9/10).onSecondCall().returns(10/10).onThirdCall().returns(9/10);
+			return expect(logiDice.roll("2d10", logiDice.mode.SCION)).to.eventually.deep.equal({
+				rolls: [9, 10],
+				result: 3
 			});
 		});
 	});
