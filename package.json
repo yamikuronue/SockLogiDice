@@ -1,0 +1,21 @@
+{
+  "name": "sock-logidice",
+  "version": "1.0.0",
+  "description": "A port of LogiDice for sockbot. This is a straight perl-to-JS port. ",
+  "main": "logiDice.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "dice",
+    "sockbot"
+  ],
+  "author": "yamikuronue",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-as-promised": "^5.3.0",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3"
+  }
+}
