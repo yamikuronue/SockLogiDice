@@ -75,7 +75,7 @@ module.exports = {
 
 			let rolls = [];
 			for(let i = 0; i < left; i++) {
-				let current = Math.random() * right;
+				let current = Math.ceil(Math.random() * right);
 			 	rolls.push(current);
 			 	if (mode == modeEnum.WW && current == 10) {
 			 		left++;
