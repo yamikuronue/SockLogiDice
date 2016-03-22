@@ -9,6 +9,10 @@ module.exports = {
 	},
 
 	roll: (dice, mode) => {
+		/*Rolling function*/
+		const rollDie = (sides) => {
+			return Math.ceil(Math.random() * sides);
+		}
 
 		/*Dice summation functions*/
 		const sumDice = (tally, current) => {
@@ -75,7 +79,7 @@ module.exports = {
 
 			let rolls = [];
 			for(let i = 0; i < left; i++) {
-				let current = Math.ceil(Math.random() * right);
+				let current = rollDie(right);
 			 	rolls.push(current);
 			 	if (mode == modeEnum.WW && current == 10) {
 			 		left++;
