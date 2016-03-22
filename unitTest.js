@@ -4,6 +4,7 @@ const expect = Chai.expect;
 const chaiAsPromised = require("chai-as-promised");
 Chai.use(chaiAsPromised);
 const Sinon = require('sinon');
+require('sinon-as-promised');
 
 const logiDice = require('./logiDice.js');
 
@@ -181,6 +182,173 @@ describe('Logios Dice for SockBot', () => {
 			return expect(logiDice.roll("2d10", logiDice.mode.SCION)).to.eventually.deep.equal({
 				rolls: [9, 10],
 				result: 3
+			});
+		});
+	});
+
+	describe('Parse', () => {
+		it('should roll dice', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			return logiDice.parse("1d10", logiDice.mode.SUM).then(() => {
+				expect(logiDice.roll.called).to.equal(true);
+			})
+
+		});
+
+		it('should add', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			return logiDice.parse("1d10+1", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(5);
+			});
+		});
+
+		it('should subtract', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			return logiDice.parse("1d10-1", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(3);
+			});
+		});
+
+		it('should add dice', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10+1d4", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(14);
+			});
+		});
+
+		it('should subtract dice', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10-1d4", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(10);
+			});
+		});
+
+		it('should add dice and constants correctly', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10+1d4+2", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(16);
+			});
+		});
+
+		it('should subtract dice and constants', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10-1d4-1", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(9);
+			});
+		});
+
+		it('should add and subtract both', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10+1d4-2", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(12);
+			});
+		});
+
+		it('should multiply', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			return logiDice.parse("1d10*2", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(8);
+			});
+		});
+
+		it('should divide', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			return logiDice.parse("1d10/2", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(2);
+			});
+		});
+
+		it('should multiply dice', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10*1d4", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(24);
+			});
+		});
+
+		it('should divide dice', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10/1d4", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(6);
 			});
 		});
 	});

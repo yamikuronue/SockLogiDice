@@ -1,11 +1,53 @@
 "use strict";
 
+const Mathjs = require('mathjs');
+
 module.exports = {
 	mode: {
 		SUM: 0,
 		FATE: 1,
 		WW: 2,
 		SCION: 3
+	},
+
+	parse: (input, mode) => {
+		function mergeResults(res1, res2) {
+			if (!res1) {
+				return res2
+			}
+
+			const retval = {
+				result: res1.result + res2.result,
+				rolls: res1.rolls.concat(res2.rolls)
+			}
+
+			return retval;
+		}
+
+		let result = {
+			input: input,
+			result: 0,
+			rolls: []
+		};
+
+		/*Roll dice*/
+		const diceItems = input.match(/\d+d\d+/g);
+
+		let dicePromises = diceItems.map((current) => { return module.exports.roll(current, mode)});
+		
+		return Promise.all(dicePromises).then((rolls) => {
+			let diceResult = diceItems.reduce((tally, current, index) => {
+				input = input.replace(diceItems[index], rolls[index]
+					.result);
+				return mergeResults(tally, result);
+			}, false);
+
+			/*Do math with order of operations*/
+			result.result = Mathjs.eval(input);
+			result.rolls = diceResult.rolls;
+
+			return result;
+		});	
 	},
 
 	roll: (dice, mode) => {
