@@ -73,5 +73,36 @@ describe('Logios Dice for SockBot', () => {
 				result: 200
 			});
 		});
+
+		/* Fate die work like this:
+			- Roll 1d6
+			- 1,2 = -1
+			- 3,4 = 0
+			- 5, 6 = +1
+		*/
+	
+		it("should roll 1dF", () => {
+			sandbox.stub(Math, 'random').returns(3/6);
+			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
+				rolls: [3],
+				result: 0
+			});
+		});
+
+		it("should return minus on dF", () => {
+			sandbox.stub(Math, 'random').returns(2/6);
+			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
+				rolls: [2],
+				result: -1
+			});
+		});
+
+		it("should return plus on dF", () => {
+			sandbox.stub(Math, 'random').returns(5/6);
+			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
+				rolls: [5],
+				result: 1
+			});
+		});
 	});
 });

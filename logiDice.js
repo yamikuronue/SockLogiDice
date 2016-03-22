@@ -9,6 +9,24 @@ module.exports = {
 	},
 
 	roll: (dice, mode) => {
+
+		/*Dice summation functions*/
+		const sumDice = (tally, current) => {
+			return tally + current;
+		}
+
+		const fateDice = (tally, current) => {
+			if (current < 3) {
+				return tally-1;
+			}
+
+			if (current > 4) {
+				return tally+1;
+			}
+
+			return tally;
+		}
+
 		return new Promise((resolve, reject) => {
 			let parts = dice.split(/d/, 2);
 			let left = parts[0];
@@ -24,16 +42,20 @@ module.exports = {
 
 			let rolls = [];
 
-			let sumDice = (tally, current) => {
-				return tally + current;
+			let summation;
+
+			if (mode == module.exports.mode.FATE) {
+				summation = fateDice;
+			} else {
+				summation = sumDice;
 			}
 
-			 for(let i = 0; i < left; i++) {
+			for(let i = 0; i < left; i++) {
 			 	rolls.push(Math.random() * right);
-			 }
+			}
 
 			let retVal = {
-				result: rolls.reduce(sumDice),
+				result: rolls.reduce(summation, 0),
 				rolls: rolls
 			}
 
