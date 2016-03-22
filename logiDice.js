@@ -51,6 +51,7 @@ module.exports = {
 			let left = parts[0];
 			let right = parts[1];
 
+			//sanity checks
 			if (left > 100) {
 				left = 100;
 			}
@@ -59,20 +60,20 @@ module.exports = {
 				right = 1000;
 			}
 
+			const summation = () => {
+				switch(mode) {
+					case modeEnum.FATE:
+						return fateDice;
+					case modeEnum.WW:
+						return wwDice;
+					case modeEnum.SCION:
+						return scionDice;
+					default:
+						return sumDice;
+				};
+			}();
+
 			let rolls = [];
-
-			let summation;
-
-			if (mode == modeEnum.FATE) {
-				summation = fateDice;
-			} else if (mode == modeEnum.WW) {
-				summation = wwDice;
-			} else if (mode == modeEnum.SCION) {
-				summation = scionDice;
-			} else {
-				summation = sumDice;
-			}
-
 			for(let i = 0; i < left; i++) {
 				let current = Math.random() * right;
 			 	rolls.push(current);
