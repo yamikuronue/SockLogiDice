@@ -14,9 +14,9 @@ describe('Logios Dice for SockBot', () => {
 	afterEach(function() {
 		sandbox.restore();
 	});
-	
+
 	describe('Roll() in summation mode', () => {
-		
+
 		it("should roll one die", () => {
 			sandbox.stub(Math, 'random').returns(3/6);
 			return expect(logiDice.roll("1d6", logiDice.mode.SUM)).to.eventually.deep.equal({
@@ -110,7 +110,7 @@ describe('Logios Dice for SockBot', () => {
 	});
 	describe('Roll() in white wolf mode', () => {
 		/*
-			White Wolf mode rolls a d10, 
+			White Wolf mode rolls a d10,
 			and on 8, 9, or 10, it adds one to the 'success' count.
 		 */
 		it("should return 0 successes for three 6s", () => {
@@ -350,6 +350,59 @@ describe('Logios Dice for SockBot', () => {
 				expect(logiDice.roll.called).to.equal(true);
 				expect(response.result).to.equal(6);
 			});
+		});
+
+		it('should apply the repetition operator', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 4,
+				rolls: [2,2]
+			});
+
+			return logiDice.parse("2x2d10", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(16);
+				expect(response.subQueries).to.be.ok;
+			});
+		});
+
+		it('should apply the repetition operator with sums', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 4,
+				rolls: [2,2]
+			});
+
+			return logiDice.parse("2x2d10+4", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(response.result).to.equal(24);
+				expect(response.subQueries).to.be.ok;
+			});
+		});
+
+		it('should not roll when there is nothing to be done', () => {
+			sandbox.stub(logiDice, 'roll').rejects();
+
+			return logiDice.parse("elephant", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(false);
+				expect(response.result).to.equal(0);
+			})
+		});
+
+		it('should auto-upgrade to Fate mode', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: -2,
+				rolls: [1,1]
+			})
+
+			return logiDice.parse("2dF", logiDice.mode.SUM).then((response) => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(logiDice.roll.calledWith("2d6", logiDice.mode.FATE)).to.equal(true);
+			})
 		});
 	});
 });

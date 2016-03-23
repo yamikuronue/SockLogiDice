@@ -25,29 +25,65 @@ module.exports = {
 		}
 
 		let result = {
-			input: input,
 			result: 0,
 			rolls: []
 		};
 
-		/*Roll dice*/
-		const diceItems = input.match(/\d+d\d+/g);
+		//Sanity check
+		if(!input.match(/[-+*/dX]/gi)) {
+			return Promise.resolve(result);
+		}
 
-		let dicePromises = diceItems.map((current) => { return module.exports.roll(current, mode)});
-		
-		return Promise.all(dicePromises).then((rolls) => {
-			let diceResult = diceItems.reduce((tally, current, index) => {
-				input = input.replace(diceItems[index], rolls[index]
-					.result);
-				return mergeResults(tally, result);
-			}, false);
+		/*Recursion operator*/
+		if (input.toUpperCase().indexOf('X') > -1) {
+			const parts = input.split(/x/g,2);
+			const left = parts[0];
+			const right = parts[1];
+			let recPromises = [];
 
-			/*Do math with order of operations*/
-			result.result = Mathjs.eval(input);
-			result.rolls = diceResult.rolls;
+			for (let i = 0; i < left; i++) {
+				recPromises.push(module.exports.parse(right));
+			}
 
-			return result;
-		});	
+			return Promise.all(recPromises).then((subQueries) => {
+				let diceResult = subQueries.reduce((tally, current, index) => {
+					return mergeResults(tally, current);
+				}, false);
+
+				/*Do math with order of operations*/
+				result.result = diceResult.result;
+				result.rolls = diceResult.rolls;
+				result.subQueries = subQueries;
+
+				return result;
+			});
+		} else {
+			/*
+				Roll dice
+			 */
+
+			 //Upgrade to Fate
+			if (input.toUpperCase().indexOf('F') > -1) {
+				mode = module.exports.mode.FATE;
+				input = input.replace(/[Ff]/g, '6');
+			}
+			const diceItems = input.match(/\d+d\d+/g);
+
+			let dicePromises = diceItems.map((current) => { return module.exports.roll(current, mode)});
+
+			return Promise.all(dicePromises).then((rolls) => {
+				let diceResult = rolls.reduce((tally, current, index) => {
+					input = input.replace(diceItems[index], current.result);
+					return mergeResults(tally, current);
+				}, false);
+
+				/*Do math with order of operations*/
+				result.result = Mathjs.eval(input);
+				result.rolls = diceResult.rolls;
+
+				return result;
+			});
+		}
 	},
 
 	roll: (dice, mode) => {
