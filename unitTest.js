@@ -453,6 +453,23 @@ describe('Logios Dice for SockBot', () => {
 				expect(result.output).to.contain('**Total**: 9');
 			});
 		});
+
+		it('should output the repetition operator', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 4,
+				rolls: [2,2]
+			});
+
+			return logiDice.parse("2x2d10", logiDice.mode.SUM).then((result) => {
+				expect(result.output).to.contain('**Your rolls:** \n');
+				expect(result.output).to.contain('2d10: 4 8 = 12');
+				expect(result.output).to.contain('2d10: 2 2 = 4');
+				expect(result.output).to.contain('**Total**: 16');
+			});
+		});
 	});
 
 	describe("RollHandler", () => {
