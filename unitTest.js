@@ -404,6 +404,55 @@ describe('Logios Dice for SockBot', () => {
 				expect(logiDice.roll.calledWith("2d6", logiDice.mode.FATE)).to.equal(true);
 			})
 		});
+
+		it('should output dice', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			return logiDice.parse("1d10", logiDice.mode.SUM).then((result) => {
+				expect(result.output).to.contain('**Your rolls:** \n');
+				expect(result.output).to.contain('1d10: 4 = 4');
+				expect(result.output).to.contain('**Total**: 4');
+			})
+
+		});
+
+		it('should output two dice', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10+1d4", logiDice.mode.SUM).then((result) => {
+				expect(result.output).to.contain('**Your rolls:** \n');
+				expect(result.output).to.contain('2d10: 4,8 = 12');
+				expect(result.output).to.contain('1d4: 2 = 2');
+				expect(result.output).to.contain('**Total**: 14');
+			});
+
+		});
+
+		it('should output dice and constants', () => {
+			sandbox.stub(logiDice, 'roll').onFirstCall().resolves({
+				result: 12,
+				rolls: [4,8]
+			}).onSecondCall().resolves({
+				result: 2,
+				rolls: [2]
+			});
+
+			return logiDice.parse("2d10-1d4-1", logiDice.mode.SUM).then((result) => {
+				expect(result.output).to.contain('**Your rolls:** \n');
+				expect(result.output).to.contain('2d10: 4,8 = 12');
+				expect(result.output).to.contain('1d4: 2 = 2');
+				expect(result.output).to.contain('**Total**: 9');
+			});
+		});
 	});
 
 	describe("RollHandler", () => {
@@ -419,11 +468,15 @@ describe('Logios Dice for SockBot', () => {
 			}
 
 			return logiDice.onRoll(fakeCommand).then(() => {
+
 				expect(logiDice.roll.called).to.equal(true);
 				expect(fakeCommand.reply.called).to.equal(true);
-				expect(fakeCommand.reply.firstCall.args[0]).to.include("1d10");
-				expect(fakeCommand.reply.firstCall.args[0]).to.include("= 4");
-				expect(fakeCommand.reply.firstCall.args[0]).to.include("You rolled");
+
+				const output = fakeCommand.reply.firstCall.args[0];
+				expect(output).to.include("You rolled 1d10:");
+				expect(output).to.contain('**Your rolls:** \n');
+				expect(output).to.contain('1d10: 4 = 4');
+				expect(output).to.contain('**Total**: 4');
 			})
 
 		});

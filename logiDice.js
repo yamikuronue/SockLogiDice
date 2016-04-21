@@ -81,15 +81,21 @@ module.exports = {
 
 			let dicePromises = diceItems.map((current) => { return module.exports.roll(current, mode)});
 
+			result.output = '**Your rolls:** \n';
+
 			return Promise.all(dicePromises).then((rolls) => {
 				let diceResult = rolls.reduce((tally, current, index) => {
 					input = input.replace(diceItems[index], current.result);
+
+					/*Prepare output*/
+					result.output += diceItems[index] + ': ' + current.rolls + ' = ' + current.result + '\n';
 					return mergeResults(tally, current);
 				}, false);
 
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
 				result.rolls = diceResult.rolls;
+				result.output += '**Total**: ' + result.result;
 
 				return result;
 			});
@@ -198,7 +204,7 @@ module.exports = {
 	onRoll: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
-			return command.reply("You rolled " + diceString + ": " + result.rolls + " = " + result.result);
+			return command.reply("You rolled " + diceString + ": \n" + result.output);
 		});
 	},
 
