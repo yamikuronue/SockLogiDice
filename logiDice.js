@@ -88,7 +88,7 @@ module.exports = {
 					input = input.replace(diceItems[index], current.result);
 
 					/*Prepare output*/
-					result.output += diceItems[index] + ': ' + current.rolls + ' = ' + current.result + '\n';
+					result.output += diceItems[index] + ': ' + current.rolls.join(' ') + ' = ' + current.result + '\n';
 					return mergeResults(tally, current);
 				}, false);
 
