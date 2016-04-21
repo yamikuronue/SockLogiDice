@@ -88,14 +88,14 @@ module.exports = {
 					input = input.replace(diceItems[index], current.result);
 
 					/*Prepare output*/
-					result.output += diceItems[index] + ': `' + current.rolls.join(' ') + '` = ' + current.result + '\n';
+					result.output += diceItems[index] + ': ' + current.rolls.join(' ') + ' = ' + current.result + '\n';
 					return mergeResults(tally, current);
 				}, false);
 
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
 				result.rolls = diceResult.rolls;
-				result.output += '**Total**: `' + result.result + '`';
+				result.output += '**Total**: ' + result.result;
 
 				return result;
 			});
