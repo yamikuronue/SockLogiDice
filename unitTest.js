@@ -405,4 +405,27 @@ describe('Logios Dice for SockBot', () => {
 			})
 		});
 	});
+
+	describe("RollHandler", () => {
+		it('should roll dice', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			const fakeCommand = {
+				reply: sandbox.stub().resolves(),
+				args: ["1d10"]
+			}
+
+			return logiDice.onRoll(fakeCommand).then(() => {
+				expect(logiDice.roll.called).to.equal(true);
+				expect(fakeCommand.reply.called).to.equal(true);
+				expect(fakeCommand.reply.firstCall.args[0]).to.include("1d10");
+				expect(fakeCommand.reply.firstCall.args[0]).to.include("= 4");
+				expect(fakeCommand.reply.firstCall.args[0]).to.include("You rolled");
+			})
+
+		});
+	})
 });

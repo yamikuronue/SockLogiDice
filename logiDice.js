@@ -3,6 +3,10 @@
 const Mathjs = require('mathjs');
 
 module.exports = {
+	/**
+	 * An enumeration of valid modes
+	 * @type {Object}
+	 */
 	mode: {
 		SUM: 0,
 		FATE: 1,
@@ -10,6 +14,12 @@ module.exports = {
 		SCION: 3
 	},
 
+	/**
+	 * Parse the input to figure out what dice to roll, then roll them
+	 * @param  {String} input The input to parse
+	 * @param  {Number} mode  What mode to roll in. Valid values are defined in the mode enum.
+	 * @return {Object}       A promise for an object that will contain two values: result (the numeric result) and rolls (the raw rolls)
+	 */
 	parse: (input, mode) => {
 		function mergeResults(res1, res2) {
 			if (!res1) {
@@ -86,6 +96,12 @@ module.exports = {
 		}
 	},
 
+	/**
+	 * Just roll some dice
+	 * @param  {String} dice The dice string, like 1d20 or 4d6
+	 * @param  {Number} mode The mode, as defined in the mode enum
+	 * @return {Object}       An object that will contain two values: result (the numeric result) and rolls (the raw rolls)
+	 */
 	roll: (dice, mode) => {
 		/*Rolling function*/
 		const rollDie = (sides) => {
@@ -171,5 +187,37 @@ module.exports = {
 
 			resolve(retVal);
 		});
+	},
+
+
+	/**
+	 * Handler for the !roll command
+	 * @param  {Command} command The command that invoked this handler
+	 * @return {Promise}         A promise that resolves when processing is done
+	 */
+	onRoll: (command) => {
+		const diceString = command.args[0];
+		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
+			return command.reply("You rolled " + diceString + ": " + result.rolls + " = " + result.result);
+		});
+	},
+
+	plugin: function(forum) {
+
+		/**
+	     * Activate the plugin.
+	     *
+	     * Register the commands to the forum instance this plugin is bound to
+	     *
+	     * @returns {Promise} Resolves when plugin is fully activated     *
+	     */
+	    function activate() {
+	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll);
+	    }
+
+	    return {
+	        activate: activate,
+	        deactivate: () => {}
+	    };
 	}
 }
