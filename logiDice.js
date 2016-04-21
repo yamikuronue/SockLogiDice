@@ -177,10 +177,23 @@ module.exports = {
 				};
 			}();
 
+			const fatify = (current) => {
+				if (current < 3) {
+					return '[-]';
+				}
+
+				if (current > 4) {
+					return '[+]';
+				}
+
+				return '[ ]'
+			}
+
 			let rolls = [];
 			for(let i = 0; i < left; i++) {
 				let current = rollDie(right);
-			 	rolls.push(current);
+				rolls.push(current);
+
 			 	if (mode == modeEnum.WW && current == 10) {
 			 		left++;
 			 	}
@@ -188,7 +201,7 @@ module.exports = {
 
 			let retVal = {
 				result: rolls.reduce(summation, 0),
-				rolls: rolls
+				rolls: (mode == modeEnum.FATE ? rolls.map(fatify) : rolls)
 			}
 
 			resolve(retVal);

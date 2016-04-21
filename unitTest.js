@@ -87,7 +87,7 @@ describe('Logios Dice for SockBot', () => {
 		it("should roll 1dF", () => {
 			sandbox.stub(Math, 'random').returns(3/6);
 			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
-				rolls: [3],
+				rolls: ['[ ]'],
 				result: 0
 			});
 		});
@@ -95,7 +95,7 @@ describe('Logios Dice for SockBot', () => {
 		it("should return minus on dF", () => {
 			sandbox.stub(Math, 'random').returns(2/6);
 			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
-				rolls: [2],
+				rolls: ['[-]'],
 				result: -1
 			});
 		});
@@ -103,7 +103,7 @@ describe('Logios Dice for SockBot', () => {
 		it("should return plus on dF", () => {
 			sandbox.stub(Math, 'random').returns(5/6);
 			return expect(logiDice.roll("1d6", logiDice.mode.FATE)).to.eventually.deep.equal({
-				rolls: [5],
+				rolls: ['[+]'],
 				result: 1
 			});
 		});
