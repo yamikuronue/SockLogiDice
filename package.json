@@ -4,7 +4,7 @@
   "description": "A port of LogiDice for sockbot. This is a straight perl-to-JS port. ",
   "main": "logiDice.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha unitTest.js"
   },
   "keywords": [
     "dice",
