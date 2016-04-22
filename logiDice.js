@@ -56,7 +56,9 @@ module.exports = {
 			}
 
 			return Promise.all(recPromises).then((subQueries) => {
+				result.output = '**Your rolls:** \n';
 				let diceResult = subQueries.reduce((tally, current, index) => {
+					result.output += right + ': ' + current.rolls.join(' ') + ' = ' + current.result + '\n';
 					return mergeResults(tally, current);
 				}, false);
 
@@ -64,6 +66,8 @@ module.exports = {
 				result.result = diceResult.result;
 				result.rolls = diceResult.rolls;
 				result.subQueries = subQueries;
+
+				result.output += '**Total**: ' + result.result;
 
 				return result;
 			});
