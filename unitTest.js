@@ -466,6 +466,32 @@ describe('Logios Dice for SockBot', () => {
 				expect(result.output).to.contain('**Grand Total**: 16');
 			});
 		});
+
+		it('should bold white wolf successes', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 39,
+				rolls: [4,8, 10, 7, 10]
+			});
+
+			return logiDice.parse("5d10", logiDice.mode.WW).then((result) => {
+				expect(result.output).to.contain('5d10: 4 **8** **10** 7 **10** = 39');
+				expect(result.output).to.contain('**Total**: 39');
+			});
+
+		});
+
+		it('should bold scion successes', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 39,
+				rolls: [4,8, 10, 7, 10]
+			});
+
+			return logiDice.parse("5d10", logiDice.mode.SCION).then((result) => {
+				expect(result.output).to.contain('5d10: 4 **8** **10** **7** **10** = 39');
+				expect(result.output).to.contain('**Total**: 39');
+			});
+
+		});
 	});
 
 	describe("RollHandler", () => {
@@ -490,6 +516,69 @@ describe('Logios Dice for SockBot', () => {
 				expect(output).to.contain('**Your rolls:** \n');
 				expect(output).to.contain('1d10: 4 = 4');
 				expect(output).to.contain('**Total**: 4');
+			})
+
+		});
+	});
+
+	describe("FateHandler", () => {
+		it('should roll Fate dice', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			const fakeCommand = {
+				reply: sandbox.stub().resolves(),
+				args: ["1d6"]
+			}
+
+			return logiDice.onFate(fakeCommand).then(() => {
+
+				expect(logiDice.roll.calledWith('1d6', logiDice.mode.FATE)).to.equal(true);
+				expect(fakeCommand.reply.called).to.equal(true);
+			})
+
+		});
+	})
+
+	describe("WWHandler", () => {
+		it('should roll White Wolf dice', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			const fakeCommand = {
+				reply: sandbox.stub().resolves(),
+				args: ["1d10"]
+			}
+
+			return logiDice.onWW(fakeCommand).then(() => {
+
+				expect(logiDice.roll.calledWith('1d10', logiDice.mode.WW)).to.equal(true);
+				expect(fakeCommand.reply.called).to.equal(true);
+			})
+
+		});
+	})
+
+	describe("ScionHandler", () => {
+		it('should roll White Wolf dice', () => {
+			sandbox.stub(logiDice, 'roll').resolves({
+				result: 4,
+				rolls: [4]
+			});
+
+			const fakeCommand = {
+				reply: sandbox.stub().resolves(),
+				args: ["1d10"]
+			}
+
+			return logiDice.onScion(fakeCommand).then(() => {
+
+				expect(logiDice.roll.calledWith('1d10', logiDice.mode.SCION)).to.equal(true);
+				expect(fakeCommand.reply.called).to.equal(true);
 			})
 
 		});

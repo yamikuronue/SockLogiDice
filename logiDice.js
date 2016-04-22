@@ -91,7 +91,16 @@ module.exports = {
 					input = input.replace(diceItems[index], current.result);
 
 					/*Prepare output*/
-					result.output += diceItems[index] + ': ' + current.rolls.join(' ') + ' = ' + current.result + '\n';
+					let rolloutput = current.rolls.join(' ');
+					if (mode == module.exports.mode.WW) {
+						rolloutput = rolloutput.replace(/([89]|10)/g, '**$1**');
+					}
+
+					if (mode == module.exports.mode.SCION) {
+						rolloutput = rolloutput.replace(/([789]|10)/g, '**$1**');
+					}
+
+					result.output += diceItems[index] + ': ' + rolloutput + ' = ' + current.result + '\n';
 					return mergeResults(tally, current);
 				}, false);
 
@@ -220,6 +229,42 @@ module.exports = {
 	onRoll: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
+			return command.reply("You rolled " + diceString + ": \n\n" + '**Your rolls:** \n' + result.output);
+		});
+	},
+
+	/**
+	 * Handler for the !rollFate command
+	 * @param  {Command} command The command that invoked this handler
+	 * @return {Promise}         A promise that resolves when processing is done
+	 */
+	onFate: (command) => {
+		const diceString = command.args[0];
+		return module.exports.parse(diceString, module.exports.mode.FATE).then((result) => {
+			return command.reply("You rolled " + diceString + ": \n\n" + '**Your rolls:** \n' + result.output);
+		});
+	},
+
+	/**
+	 * Handler for the !rollWW command
+	 * @param  {Command} command The command that invoked this handler
+	 * @return {Promise}         A promise that resolves when processing is done
+	 */
+	onWW: (command) => {
+		const diceString = command.args[0];
+		return module.exports.parse(diceString, module.exports.mode.WW).then((result) => {
+			return command.reply("You rolled " + diceString + ": \n\n" + '**Your rolls:** \n' + result.output);
+		});
+	},
+
+	/**
+	 * Handler for the !rollScion command
+	 * @param  {Command} command The command that invoked this handler
+	 * @return {Promise}         A promise that resolves when processing is done
+	 */
+	onScion: (command) => {
+		const diceString = command.args[0];
+		return module.exports.parse(diceString, module.exports.mode.SCION).then((result) => {
 			return command.reply("You rolled " + diceString + ": \n\n" + '**Your rolls:** \n' + result.output);
 		});
 	},
