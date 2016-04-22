@@ -36,7 +36,8 @@ module.exports = {
 
 		let result = {
 			result: 0,
-			rolls: []
+			rolls: [],
+			output: ''
 		};
 
 		//Sanity check
@@ -56,9 +57,9 @@ module.exports = {
 			}
 
 			return Promise.all(recPromises).then((subQueries) => {
-				result.output = '**Your rolls:** \n';
 				let diceResult = subQueries.reduce((tally, current, index) => {
-					result.output += right + ': ' + current.rolls.join(' ') + ' = ' + current.result + '\n';
+					result.output += current.output;
+					result.output += '---\n';
 					return mergeResults(tally, current);
 				}, false);
 
@@ -67,7 +68,7 @@ module.exports = {
 				result.rolls = diceResult.rolls;
 				result.subQueries = subQueries;
 
-				result.output += '**Total**: ' + result.result;
+				result.output += '**Grand Total**: ' + result.result;
 
 				return result;
 			});
@@ -84,8 +85,6 @@ module.exports = {
 			const diceItems = input.match(/\d+d\d+/g);
 
 			let dicePromises = diceItems.map((current) => { return module.exports.roll(current, mode)});
-
-			result.output = '**Your rolls:** \n';
 
 			return Promise.all(dicePromises).then((rolls) => {
 				let diceResult = rolls.reduce((tally, current, index) => {
@@ -221,7 +220,7 @@ module.exports = {
 	onRoll: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
-			return command.reply("You rolled " + diceString + ": \n" + result.output);
+			return command.reply("You rolled " + diceString + ": \n\n" + '**Your rolls:** \n' + result.output);
 		});
 	},
 

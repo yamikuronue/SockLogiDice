@@ -412,7 +412,6 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("1d10", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('**Your rolls:** \n');
 				expect(result.output).to.contain('1d10: 4 = 4');
 				expect(result.output).to.contain('**Total**: 4');
 			})
@@ -429,7 +428,6 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("2d10+1d4", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('**Your rolls:** \n');
 				expect(result.output).to.contain('2d10: 4 8 = 12');
 				expect(result.output).to.contain('1d4: 2 = 2');
 				expect(result.output).to.contain('**Total**: 14');
@@ -447,7 +445,6 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("2d10-1d4-1", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('**Your rolls:** \n');
 				expect(result.output).to.contain('2d10: 4 8 = 12');
 				expect(result.output).to.contain('1d4: 2 = 2');
 				expect(result.output).to.contain('**Total**: 9');
@@ -464,10 +461,9 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("2x2d10", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('**Your rolls:** \n');
 				expect(result.output).to.contain('2d10: 4 8 = 12');
 				expect(result.output).to.contain('2d10: 2 2 = 4');
-				expect(result.output).to.contain('**Total**: 16');
+				expect(result.output).to.contain('**Grand Total**: 16');
 			});
 		});
 	});
