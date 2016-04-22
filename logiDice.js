@@ -279,7 +279,10 @@ module.exports = {
 	     * @returns {Promise} Resolves when plugin is fully activated     *
 	     */
 	    function activate() {
-	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll);
+	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll)
+	        		.then(() => forum.Commands.add('rollWW', 'Roll dice for White Wolf games', module.exports.onWW))
+	        		.then(() => forum.Commands.add('rollScion', 'Roll dice for Scion', module.exports.onScion))
+	        		.then(() => forum.Commands.add('rollFate', 'Roll dice for Fate', module.exports.onFate))
 	    }
 
 	    return {
