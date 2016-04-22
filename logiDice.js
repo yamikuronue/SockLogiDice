@@ -59,7 +59,7 @@ module.exports = {
 			return Promise.all(recPromises).then((subQueries) => {
 				let diceResult = subQueries.reduce((tally, current, index) => {
 					result.output += current.output;
-					result.output += '---\n';
+					result.output += '\n---\n';
 					return mergeResults(tally, current);
 				}, false);
 
