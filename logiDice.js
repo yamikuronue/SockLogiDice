@@ -280,9 +280,9 @@ module.exports = {
 	     */
 	    function activate() {
 	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll)
-	        		.then(() => forum.Commands.add('rollWW', 'Roll dice for White Wolf games', module.exports.onWW))
-	        		.then(() => forum.Commands.add('rollScion', 'Roll dice for Scion', module.exports.onScion))
-	        		.then(() => forum.Commands.add('rollFate', 'Roll dice for Fate', module.exports.onFate))
+	        		.then(() => forum.Commands.add('rollww', 'Roll dice for White Wolf games', module.exports.onWW))
+	        		.then(() => forum.Commands.add('rollscion', 'Roll dice for Scion', module.exports.onScion))
+	        		.then(() => forum.Commands.add('rollfate', 'Roll dice for Fate', module.exports.onFate))
 	    }
 
 	    return {
