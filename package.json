@@ -1,6 +1,6 @@
 {
   "name": "sock-logidice",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A port of LogiDice for sockbot. This is a straight perl-to-JS port. ",
   "main": "logiDice.js",
   "scripts": {
