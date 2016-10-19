@@ -59,8 +59,7 @@ module.exports = {
 
 			return Promise.all(recPromises).then((subQueries) => {
 				let diceResult = subQueries.reduce((tally, current, index) => {
-					result.output += current.output;
-					result.output += '\n\n---\n';
+					result.output += module.exports.view.formatMultiRoll(current.output);
 					return mergeResults(tally, current);
 				}, false);
 
@@ -69,7 +68,7 @@ module.exports = {
 				result.rolls = diceResult.rolls;
 				result.subQueries = subQueries;
 
-				result.output += '**Grand Total**: ' + result.result;
+				result.output += module.exports.view.formatGrandTotal(result.result);
 
 				return result;
 			});

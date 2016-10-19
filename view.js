@@ -8,6 +8,7 @@ class View {
     }
     
     formatRoll(dice, rolls, result) {
+        //This is a single roll
         if (this.multiline) {
             return `${dice}: ${rolls} = ${result}\n`;
         } else {
@@ -15,7 +16,18 @@ class View {
         }
     }
     
+    formatMultiRoll(line) {
+        //This is one of many rolls using the recursion operator 'x'
+        //The input is the result of the above formatRoll
+        if (this.multiline) {
+            return `${line}\n\n---\n`;
+        } else {
+            return `«${line}»`;
+        }
+    }
+    
     formatOutput(output, input, total) {
+        //This is the total output for a single set of rolls
         if (this.multiline) {
             if (this.spoiler) {
                 //This is badly named, we're really looking for a summary-details widget
@@ -27,6 +39,11 @@ class View {
         }
         
         return `You rolled: ${input} || ${output}  || Total: ${this.formatter.bold(total)}`;
+    }
+    
+    formatGrandTotal(total) {
+        //This is the final output for a recursion operator rll
+        return `${this.formatter.bold('Grand Total')}: ${total}`;
     }
 }
 
