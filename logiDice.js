@@ -1,6 +1,7 @@
 "use strict";
 
 const Mathjs = require('mathjs');
+const View = require('./view');
 
 module.exports = {
 	/**
@@ -100,14 +101,13 @@ module.exports = {
 						rolloutput = rolloutput.replace(/([789]|10)/g, '**$1**');
 					}
 
-					result.output += diceItems[index] + ': ' + rolloutput + ' = ' + current.result + '\n';
+					result.output += module.exports.view.formatRoll(diceItems[index], rolloutput, current.result);
 					return mergeResults(tally, current);
 				}, false);
 
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
 				result.rolls = diceResult.rolls;
-				result.output += '**Total**: ' + result.result;
 
 				return result;
 			});
@@ -229,7 +229,9 @@ module.exports = {
 	onRoll: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result.output, diceString, result.result)
+			);
 		});
 	},
 
@@ -241,7 +243,9 @@ module.exports = {
 	onFate: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.FATE).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result.output, diceString, result.result)
+			);
 		});
 	},
 
@@ -253,7 +257,9 @@ module.exports = {
 	onWW: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.WW).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result.output, diceString, result.result)
+			);
 		});
 	},
 
@@ -265,12 +271,10 @@ module.exports = {
 	onScion: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SCION).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result.output, diceString, result.result)
+			);
 		});
-	},
-
-	spoiler: (body, title) => {
-		return title + "\n\n" + body;
 	},
 
 	plugin: function(forum) {
@@ -283,7 +287,7 @@ module.exports = {
 	     * @returns {Promise} Resolves when plugin is fully activated     *
 	     */
 	    function activate() {
-	    	module.exports.spoiler = forum.Format.spoiler;
+	    	module.exports.view = new View(forum);
 	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll)
 	        		.then(() => forum.Commands.add('rollww', 'Roll dice for White Wolf games', module.exports.onWW))
 	        		.then(() => forum.Commands.add('rollscion', 'Roll dice for Scion', module.exports.onScion))
