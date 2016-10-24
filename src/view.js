@@ -74,11 +74,6 @@ class View {
         
         return `You rolled: ${result.input} || ${rolls} || Total: ${this.formatter.bold(result.result)}`;
     }
-    
-    formatGrandTotal(total) {
-        //This is the final output for a recursion operator rll
-        return `${this.formatter.bold('Grand Total')} : ${total}`;
-    }
 }
 
 module.exports = View;

@@ -175,7 +175,7 @@ module.exports = {
 				right = 1000;
 			}
 
-			const summation = () => {
+			const summation = function() {
 				switch(mode) {
 					case modeEnum.FATE:
 						return fateDice;
@@ -185,7 +185,7 @@ module.exports = {
 						return scionDice;
 					default:
 						return sumDice;
-				};
+				}
 			}();
 
 			const fatify = (current) => {
