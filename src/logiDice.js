@@ -1,6 +1,7 @@
 "use strict";
 
 const Mathjs = require('mathjs');
+const View = require('./view');
 
 module.exports = {
 	/**
@@ -13,12 +14,24 @@ module.exports = {
 		WW: 2,
 		SCION: 3
 	},
+	
+	/**
+	 * A result object
+	 * @typedef {Object} Result
+	 * @property {Numeric} result The total, typically the sum of all dice rolled.
+	 *			The exact semantics depend on the dice mode.
+	 * @property {Array} rolls Strings describing what dice were rolled
+	 * @property {Array} subQueries If the recursion operator was used, this will
+	 *			contain the subqueries that added up to the total
+	 * @property {String} input The raw input requested
+	 */
+
 
 	/**
 	 * Parse the input to figure out what dice to roll, then roll them
 	 * @param  {String} input The input to parse
 	 * @param  {Number} mode  What mode to roll in. Valid values are defined in the mode enum.
-	 * @return {Object}       A promise for an object that will contain two values: result (the numeric result) and rolls (the raw rolls)
+	 * @return {Result}       The result of the rolling
 	 */
 	parse: (input, mode) => {
 		function mergeResults(res1, res2) {
@@ -35,9 +48,10 @@ module.exports = {
 		}
 
 		let result = {
+			input: new String(input),
 			result: 0,
 			rolls: [],
-			output: ''
+			subQueries: false
 		};
 
 		//Sanity check
@@ -58,8 +72,6 @@ module.exports = {
 
 			return Promise.all(recPromises).then((subQueries) => {
 				let diceResult = subQueries.reduce((tally, current, index) => {
-					result.output += current.output;
-					result.output += '\n\n---\n';
 					return mergeResults(tally, current);
 				}, false);
 
@@ -67,9 +79,7 @@ module.exports = {
 				result.result = diceResult.result;
 				result.rolls = diceResult.rolls;
 				result.subQueries = subQueries;
-
-				result.output += '**Grand Total**: ' + result.result;
-
+				
 				return result;
 			});
 		} else {
@@ -78,7 +88,7 @@ module.exports = {
 			 */
 
 			 //Upgrade to Fate
-			if (input.toUpperCase().indexOf('F') > -1) {
+			if (input.indexOf('dF') > -1) {
 				mode = module.exports.mode.FATE;
 				input = input.replace(/[Ff]/g, '6');
 			}
@@ -89,26 +99,14 @@ module.exports = {
 			return Promise.all(dicePromises).then((rolls) => {
 				let diceResult = rolls.reduce((tally, current, index) => {
 					input = input.replace(diceItems[index], current.result);
-
-					/*Prepare output*/
-					let rolloutput = current.rolls.join(' ');
-					if (mode == module.exports.mode.WW) {
-						rolloutput = rolloutput.replace(/([89]|10)/g, '**$1**');
-					}
-
-					if (mode == module.exports.mode.SCION) {
-						rolloutput = rolloutput.replace(/([789]|10)/g, '**$1**');
-					}
-
-					result.output += diceItems[index] + ': ' + rolloutput + ' = ' + current.result + '\n';
+					current.rolls = [module.exports.view.formatRoll(diceItems[index], current.rolls, current.result, mode)];
 					return mergeResults(tally, current);
 				}, false);
 
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
 				result.rolls = diceResult.rolls;
-				result.output += '**Total**: ' + result.result;
-
+				
 				return result;
 			});
 		}
@@ -118,7 +116,8 @@ module.exports = {
 	 * Just roll some dice
 	 * @param  {String} dice The dice string, like 1d20 or 4d6
 	 * @param  {Number} mode The mode, as defined in the mode enum
-	 * @return {Object}       An object that will contain two values: result (the numeric result) and rolls (the raw rolls)
+	 * @return {Object}       The result of the roll. Two parameters:
+	 *					Result is the total, and Rolls is the raw dice
 	 */
 	roll: (dice, mode) => {
 		/*Rolling function*/
@@ -176,7 +175,7 @@ module.exports = {
 				right = 1000;
 			}
 
-			const summation = () => {
+			const summation = function() {
 				switch(mode) {
 					case modeEnum.FATE:
 						return fateDice;
@@ -186,7 +185,7 @@ module.exports = {
 						return scionDice;
 					default:
 						return sumDice;
-				};
+				}
 			}();
 
 			const fatify = (current) => {
@@ -229,7 +228,9 @@ module.exports = {
 	onRoll: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result)
+			);
 		});
 	},
 
@@ -241,7 +242,9 @@ module.exports = {
 	onFate: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.FATE).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result)
+			);
 		});
 	},
 
@@ -253,7 +256,9 @@ module.exports = {
 	onWW: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.WW).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result)
+			);
 		});
 	},
 
@@ -265,12 +270,10 @@ module.exports = {
 	onScion: (command) => {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SCION).then((result) => {
-			return command.reply(module.exports.spoiler("**Your rolls:** \n" + result.output, "You rolled " + diceString + ":"));
+			return command.reply(
+				module.exports.view.formatOutput(result)
+			);
 		});
-	},
-
-	spoiler: (body, title) => {
-		return title + "\n\n" + body;
 	},
 
 	plugin: function(forum) {
@@ -283,7 +286,7 @@ module.exports = {
 	     * @returns {Promise} Resolves when plugin is fully activated     *
 	     */
 	    function activate() {
-	    	module.exports.spoiler = forum.Format.spoiler;
+	    	module.exports.view = new View(forum);
 	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll)
 	        		.then(() => forum.Commands.add('rollww', 'Roll dice for White Wolf games', module.exports.onWW))
 	        		.then(() => forum.Commands.add('rollscion', 'Roll dice for Scion', module.exports.onScion))

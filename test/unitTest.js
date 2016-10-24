@@ -2,17 +2,50 @@
 const Chai = require('chai');
 const expect = Chai.expect;
 const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require("sinon-chai");
 Chai.use(chaiAsPromised);
+Chai.use(sinonChai);
+
 const Sinon = require('sinon');
 require('sinon-as-promised');
 
-const logiDice = require('./logiDice.js');
+const logiDice = require('../src/logiDice.js');
+const View = require('../src/view');
 
 describe('Logios Dice for SockBot', () => {
 	let sandbox = Sinon.sandbox.create();
+	
+	beforeEach(function() {
+		logiDice.view = new View({
+			Format: {
+				bold: (input) => `**${input}**`,
+				spoiler: (body, summary) => `${summary} : ${body}`
+			},
+			supports: (item) => true
+		});
+	});
 
 	afterEach(function() {
 		sandbox.restore();
+	});
+	
+	describe('Activate/plugin', () => {
+		const fakeForum = {
+			Commands: {
+				add: () => Promise.resolve()
+			},
+			supports: () => false
+		};
+		
+		it('Should activate commands', () => {
+			sandbox.spy(fakeForum.Commands, 'add');
+			logiDice.plugin(fakeForum).activate().then(() => {
+				fakeForum.Commands.add.should.be.calledWith('roll');
+				fakeForum.Commands.add.should.be.calledWith('rollww');
+				fakeForum.Commands.add.should.be.calledWith('rollscion');
+				fakeForum.Commands.add.should.be.calledWith('rollfate');
+			});
+		});
 	});
 
 	describe('Roll() in summation mode', () => {
@@ -410,11 +443,13 @@ describe('Logios Dice for SockBot', () => {
 				result: 4,
 				rolls: [4]
 			});
+			
+			sandbox.stub(logiDice.view, 'formatOutput').returns('output');
 
 			return logiDice.parse("1d10", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('1d10: 4 = 4');
-				expect(result.output).to.contain('**Total**: 4');
-			})
+				expect(result.rolls).to.contain('1d10: 4 = 4');
+				expect(result.result).to.equal(4);
+			});
 
 		});
 
@@ -428,9 +463,9 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("2d10+1d4", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('2d10: 4 8 = 12');
-				expect(result.output).to.contain('1d4: 2 = 2');
-				expect(result.output).to.contain('**Total**: 14');
+				expect(result.rolls).to.contain('2d10: 4 8 = 12');
+				expect(result.rolls).to.contain('1d4: 2 = 2');
+				expect(result.result).to.equal(14);
 			});
 
 		});
@@ -445,9 +480,8 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("2d10-1d4-1", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('2d10: 4 8 = 12');
-				expect(result.output).to.contain('1d4: 2 = 2');
-				expect(result.output).to.contain('**Total**: 9');
+				expect(result.rolls).to.contain('2d10: 4 8 = 12');
+				expect(result.rolls).to.contain('1d4: 2 = 2');
 			});
 		});
 
@@ -461,9 +495,8 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("2x2d10", logiDice.mode.SUM).then((result) => {
-				expect(result.output).to.contain('2d10: 4 8 = 12');
-				expect(result.output).to.contain('2d10: 2 2 = 4');
-				expect(result.output).to.contain('**Grand Total**: 16');
+				expect(result.rolls).to.contain('2d10: 4 8 = 12');
+				expect(result.rolls).to.contain('2d10: 2 2 = 4');
 			});
 		});
 
@@ -474,10 +507,8 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("5d10", logiDice.mode.WW).then((result) => {
-				expect(result.output).to.contain('5d10: 4 **8** **10** 7 **10** = 39');
-				expect(result.output).to.contain('**Total**: 39');
+				expect(result.rolls).to.contain('5d10: 4 **8** **10** 7 **10** = 39');
 			});
-
 		});
 
 		it('should bold scion successes', () => {
@@ -487,8 +518,7 @@ describe('Logios Dice for SockBot', () => {
 			});
 
 			return logiDice.parse("5d10", logiDice.mode.SCION).then((result) => {
-				expect(result.output).to.contain('5d10: 4 **8** **10** **7** **10** = 39');
-				expect(result.output).to.contain('**Total**: 39');
+				expect(result.rolls).to.contain('5d10: 4 **8** **10** **7** **10** = 39');
 			});
 
 		});
@@ -513,9 +543,7 @@ describe('Logios Dice for SockBot', () => {
 
 				const output = fakeCommand.reply.firstCall.args[0];
 				expect(output).to.include("You rolled 1d10:");
-				expect(output).to.contain('**Your rolls:** \n');
 				expect(output).to.contain('1d10: 4 = 4');
-				expect(output).to.contain('**Total**: 4');
 			})
 
 		});
@@ -579,8 +607,238 @@ describe('Logios Dice for SockBot', () => {
 
 				expect(logiDice.roll.calledWith('1d10', logiDice.mode.SCION)).to.equal(true);
 				expect(fakeCommand.reply.called).to.equal(true);
-			})
-
+			});
 		});
-	})
+	});
+});
+
+describe('Logios Dice view', () => {
+	let sandbox = Sinon.sandbox.create();
+	let view;
+	
+	describe('single-line mode', () => {
+		before(function() {
+			view = new View({
+				Format: {
+					bold: (input) => `*${input}*`,
+					spoiler: (body, summary) => `${summary} : ${body}`
+				},
+				supports: (item) => false
+			});
+			view.multiline = false; 
+		});
+	
+		afterEach(function() {
+			sandbox.restore();
+		});
+		
+		describe('formatOutput', () => {
+			it('should trim trailing | ', () => {
+				const expected = 'You rolled: 1d20 || 1d20: 8 = 8 || Total: *8*';
+				const result = {
+					input: '1d20',
+					rolls: [view.formatRoll('1d20', [8], 8, logiDice.mode.SUM)],
+					result: 8
+				};
+					
+				expect(view.formatOutput(result)).to.equal(expected);
+			});
+			
+			it('should trim trailing | in multiple lines', () => {
+				const expected = 'You rolled: 1d20+2d4 || 1d20: 8 = 8 | 2d4: 1 2 = 3 || Total: *11*';
+				const result = {
+					input: '1d20+2d4',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('2d4', [1,2], 3, logiDice.mode.SUM)
+					],
+					result: 11
+				};
+					
+				expect(view.formatOutput(result)).to.equal(expected);
+			});
+			
+			it('should trim trailing | in multiple recursion lines', () => {
+				const expected = 'You rolled: 2x1d20 || «1d20: 8 = 8» | «1d20: 4 = 4» || Total: *12*';
+				const result = {
+					input: '2x1d20',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('1d20', [4], 4, logiDice.mode.SUM)
+						],
+					result: 12,
+					subQueries: [
+						{
+							input: '1d20',
+							rolls: [
+								view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+							],
+							result: 8
+						},
+						{
+							input: '1d20',
+							rolls: [
+								view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+							],
+							result: 4
+						}
+					]
+				};
+					
+				expect(view.formatOutput(result)).to.equal(expected);
+			});
+			
+			it('should trim trailing | in multiple recursion lineswith multiple rolls', () => {
+				const expected = 'You rolled: 2x1d20+2d4 || «1d20: 8 = 8 | 2d4: 1 3 = 4» | «1d20: 4 = 4 | 2d4: 2 2 = 4» || Total: *20*';
+				const result = {
+					input: '2x1d20+2d4',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('2d4', [1,3], 4, logiDice.mode.SUM),
+						view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+						view.formatRoll('2d4', [2,2], 4, logiDice.mode.SUM),
+						],
+					result: 20,
+					subQueries: [
+						{
+							input: '1d20+2d4',
+							rolls: [
+								view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+								view.formatRoll('2d4', [1,3], 4, logiDice.mode.SUM),
+							],
+							result: 11
+						},
+						{
+							input: '1d20+2d4',
+							rolls: [
+								view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+								view.formatRoll('2d4', [2,2], 4, logiDice.mode.SUM),
+							],
+							result: 8
+						}
+					]
+				};
+					
+				expect(view.formatOutput(result)).to.equal(expected);
+			});
+		});
+	});
+	
+	
+	describe('multi-line mode', () => {
+		const fakeForum = {
+				Format: {
+					bold: (input) => `*${input}*`,
+					spoiler: (body, summary) => `${summary} : ${body}`
+				},
+				supports: (item) => true
+			};
+			
+		before(function() {
+			view = new View(fakeForum);
+			view.multiline = true; 
+		});
+	
+		afterEach(function() {
+			sandbox.restore();
+		});
+		
+		describe('formatOutput', () => {
+			it('should offer spoilers if supported', () => {
+				view.spoiler = true;
+				sandbox.spy(fakeForum.Format, 'spoiler');
+				const result = {
+					input: '1d20',
+					rolls: [view.formatRoll('1d20', [8], 8, logiDice.mode.SUM)],
+					result: 8
+				};
+					
+				view.formatOutput(result);
+				expect(fakeForum.Format.spoiler).to.have.been.calledOnce;
+				const args = fakeForum.Format.spoiler.firstCall.args;
+				expect(args[0]).to.equal('*Your rolls*: \n1d20: 8 = 8\nTotal: *8*');
+				expect(args[1]).to.equal('You rolled 1d20: 8');
+			});
+			
+			it('should use multiple lines without spoilers if not supported', () => {
+				view.spoiler = false;
+				const result = {
+					input: '1d20',
+					rolls: [view.formatRoll('1d20', [8], 8, logiDice.mode.SUM)],
+					result: 8
+				};
+					
+				expect(view.formatOutput(result)).to.equal('You rolled 1d20\n\n1d20: 8 = 8\nTotal: *8*');
+			});
+			
+			it('should offer spoilers with recursion if supported', () => {
+				view.spoiler = true;
+				sandbox.spy(fakeForum.Format, 'spoiler');
+				const result = {
+					input: '2x1d20',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('1d20', [4], 4, logiDice.mode.SUM)
+						],
+					result: 12,
+					subQueries: [
+						{
+							input: '1d20',
+							rolls: [
+								view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+							],
+							result: 8
+						},
+						{
+							input: '1d20',
+							rolls: [
+								view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+							],
+							result: 4
+						}
+					]
+				};
+					
+				view.formatOutput(result);
+				expect(fakeForum.Format.spoiler).to.have.been.calledOnce;
+				const args = fakeForum.Format.spoiler.firstCall.args;
+				expect(args[0]).to.equal('*Your rolls*: \n*1d20*:\n- 1d20: 8 = 8\n\n*1d20*:\n- 1d20: 4 = 4\n\nTotal: *12*');
+				expect(args[1]).to.equal('You rolled 2x1d20: 12');
+			});
+			
+			it('should use multiple lines with recursion without spoilers', () => {
+				view.spoiler = false;
+				const result = {
+					input: '2x1d20+2d4',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('2d4', [1,3], 4, logiDice.mode.SUM),
+						view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+						view.formatRoll('2d4', [2,2], 4, logiDice.mode.SUM),
+						],
+					result: 20,
+					subQueries: [
+						{
+							input: '1d20+2d4',
+							rolls: [
+								view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+								view.formatRoll('2d4', [1,3], 4, logiDice.mode.SUM),
+							],
+							result: 11
+						},
+						{
+							input: '1d20+2d4',
+							rolls: [
+								view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+								view.formatRoll('2d4', [2,2], 4, logiDice.mode.SUM),
+							],
+							result: 8
+						}
+					]
+				};
+					
+				expect(view.formatOutput(result)).to.equal('You rolled 2x1d20+2d4\n\n*1d20+2d4*:\n- 1d20: 8 = 8\n- 2d4: 1 3 = 4\n\n*1d20+2d4*:\n- 1d20: 4 = 4\n- 2d4: 2 2 = 4\n\nTotal: *20*');
+			});
+		});
+	});
 });
