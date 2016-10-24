@@ -1,5 +1,18 @@
 'use strict'
 
+const logiDice = require('./logiDice.js');
+
+/**
+ * An enumeration of valid modes
+ * @type {Object}
+ */
+const MODE = {
+	SUM: 0,
+	FATE: 1,
+	WW: 2,
+	SCION: 3
+};
+
 class View {
     constructor (forum) {
         this.formatter = forum.Format;
@@ -7,13 +20,18 @@ class View {
         this.spoiler = forum.supports('Formatting.Spoiler');
     }
     
-    formatRoll(dice, rolls, result) {
+    formatRoll(dice, rolls, result, mode) {
         //This is a single roll
-        if (this.multiline) {
-            return `${dice}: ${rolls} = ${result}\n`;
-        } else {
-            return `${dice}: ${rolls} = ${result} | `;
-        }
+        rolls = rolls.join(' ');
+        if (mode == MODE.WW) {
+    		rolls = rolls.map((roll) => roll.replace(/([89]|10)/g, '**$1**'));
+    	}
+    
+    	if (mode == MODE.SCION) {
+    		rolls = rolls.map((roll) => roll.replace(/([789]|10)/g, '**$1**'));
+    	}
+    	
+       return `${dice}: ${rolls} = ${result}`;
     }
     
     formatMultiRoll(line) {
@@ -22,28 +40,28 @@ class View {
         if (this.multiline) {
             return `${line}\n\n---\n`;
         } else {
-            return `«${line}»`;
+            return `«${line}» `;
         }
     }
     
-    formatOutput(output, input, total) {
+    formatOutput(result) {
         //This is the total output for a single set of rolls
         if (this.multiline) {
             if (this.spoiler) {
                 //This is badly named, we're really looking for a summary-details widget
-                return this.formatter.spoiler(`${this.formatter.bold("Your rolls")}: \n ${output} \n Total: ${total}`, //details
-                    `You rolled ${input}:`); //summary
+                return this.formatter.spoiler(`${this.formatter.bold("Your rolls")}: \n${result.rolls.join('\n')}\nTotal: ${this.formatter.bold(result.result)}`, //details
+                    `You rolled ${result.input}: ${result.result}`); //summary
             }
             
-            return `You rolled ${input}\n\n ${output} \n\n Total: ${this.formatter.bold(total)}`;
+            return `You rolled ${result.input}\n\n${result.rolls.join('\n')}\n\nTotal: ${this.formatter.bold(result.result)}`;
         }
         
-        return `You rolled: ${input} || ${output}  || Total: ${this.formatter.bold(total)}`;
+        return `You rolled: ${result.input} || ${result.rolls.join(' | ')} || Total: ${this.formatter.bold(result.result)}`;
     }
     
     formatGrandTotal(total) {
         //This is the final output for a recursion operator rll
-        return `${this.formatter.bold('Grand Total')}: ${total}`;
+        return `${this.formatter.bold('Grand Total')} : ${total}`;
     }
 }
 

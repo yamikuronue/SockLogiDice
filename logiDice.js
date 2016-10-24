@@ -14,12 +14,24 @@ module.exports = {
 		WW: 2,
 		SCION: 3
 	},
+	
+	/**
+	 * A result object
+	 * @typedef {Object} Result
+	 * @property {Numeric} result The total, typically the sum of all dice rolled.
+	 *			The exact semantics depend on the dice mode.
+	 * @property {Array} rolls Strings describing what dice were rolled
+	 * @property {Array} subQueries If the recursion operator was used, this will
+	 *			contain the subqueries that added up to the total
+	 * @property {String} input The raw input requested
+	 */
+
 
 	/**
 	 * Parse the input to figure out what dice to roll, then roll them
 	 * @param  {String} input The input to parse
 	 * @param  {Number} mode  What mode to roll in. Valid values are defined in the mode enum.
-	 * @return {Object}       A promise for an object that will contain two values: result (the numeric result) and rolls (the raw rolls)
+	 * @return {Result}       The result of the rolling
 	 */
 	parse: (input, mode) => {
 		function mergeResults(res1, res2) {
@@ -36,9 +48,10 @@ module.exports = {
 		}
 
 		let result = {
+			input: new String(input),
 			result: 0,
 			rolls: [],
-			output: ''
+			subQueries: false
 		};
 
 		//Sanity check
@@ -59,7 +72,6 @@ module.exports = {
 
 			return Promise.all(recPromises).then((subQueries) => {
 				let diceResult = subQueries.reduce((tally, current, index) => {
-					result.output += module.exports.view.formatMultiRoll(current.output);
 					return mergeResults(tally, current);
 				}, false);
 
@@ -67,9 +79,7 @@ module.exports = {
 				result.result = diceResult.result;
 				result.rolls = diceResult.rolls;
 				result.subQueries = subQueries;
-
-				result.output += module.exports.view.formatGrandTotal(result.result);
-
+				
 				return result;
 			});
 		} else {
@@ -89,25 +99,14 @@ module.exports = {
 			return Promise.all(dicePromises).then((rolls) => {
 				let diceResult = rolls.reduce((tally, current, index) => {
 					input = input.replace(diceItems[index], current.result);
-
-					/*Prepare output*/
-					let rolloutput = current.rolls.join(' ');
-					if (mode == module.exports.mode.WW) {
-						rolloutput = rolloutput.replace(/([89]|10)/g, '**$1**');
-					}
-
-					if (mode == module.exports.mode.SCION) {
-						rolloutput = rolloutput.replace(/([789]|10)/g, '**$1**');
-					}
-
-					result.output += module.exports.view.formatRoll(diceItems[index], rolloutput, current.result);
+					current.rolls = [module.exports.view.formatRoll(diceItems[index], current.rolls, current.result, mode)];
 					return mergeResults(tally, current);
 				}, false);
 
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
 				result.rolls = diceResult.rolls;
-
+				
 				return result;
 			});
 		}
@@ -117,7 +116,8 @@ module.exports = {
 	 * Just roll some dice
 	 * @param  {String} dice The dice string, like 1d20 or 4d6
 	 * @param  {Number} mode The mode, as defined in the mode enum
-	 * @return {Object}       An object that will contain two values: result (the numeric result) and rolls (the raw rolls)
+	 * @return {Object}       The result of the roll. Two parameters:
+	 *					Result is the total, and Rolls is the raw dice
 	 */
 	roll: (dice, mode) => {
 		/*Rolling function*/
@@ -229,7 +229,7 @@ module.exports = {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SUM).then((result) => {
 			return command.reply(
-				module.exports.view.formatOutput(result.output, diceString, result.result)
+				module.exports.view.formatOutput(result)
 			);
 		});
 	},
@@ -243,7 +243,7 @@ module.exports = {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.FATE).then((result) => {
 			return command.reply(
-				module.exports.view.formatOutput(result.output, diceString, result.result)
+				module.exports.view.formatOutput(result)
 			);
 		});
 	},
@@ -257,7 +257,7 @@ module.exports = {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.WW).then((result) => {
 			return command.reply(
-				module.exports.view.formatOutput(result.output, diceString, result.result)
+				module.exports.view.formatOutput(result)
 			);
 		});
 	},
@@ -271,7 +271,7 @@ module.exports = {
 		const diceString = command.args[0];
 		return module.exports.parse(diceString, module.exports.mode.SCION).then((result) => {
 			return command.reply(
-				module.exports.view.formatOutput(result.output, diceString, result.result)
+				module.exports.view.formatOutput(result)
 			);
 		});
 	},
