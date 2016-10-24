@@ -17,7 +17,7 @@ class View {
     constructor (forum) {
         this.formatter = forum.Format;
         this.multiline = forum.supports('Formatting.Multiline');
-        this.spoiler = forum.supports('Formatting.Spoiler');
+        this.spoiler = forum.supports('Formatting.Spoilers');
     }
     
     formatRoll(dice, rolls, result, mode) {
