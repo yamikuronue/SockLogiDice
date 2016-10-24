@@ -28,6 +28,25 @@ describe('Logios Dice for SockBot', () => {
 	afterEach(function() {
 		sandbox.restore();
 	});
+	
+	describe('Activate/plugin', () => {
+		const fakeForum = {
+			Commands: {
+				add: () => Promise.resolve()
+			},
+			supports: () => false
+		};
+		
+		it('Should activate commands', () => {
+			sandbox.spy(fakeForum.Commands, 'add');
+			logiDice.plugin(fakeForum).activate().then(() => {
+				fakeForum.Commands.add.should.be.calledWith('roll');
+				fakeForum.Commands.add.should.be.calledWith('rollww');
+				fakeForum.Commands.add.should.be.calledWith('rollscion');
+				fakeForum.Commands.add.should.be.calledWith('rollfate');
+			});
+		});
+	});
 
 	describe('Roll() in summation mode', () => {
 
