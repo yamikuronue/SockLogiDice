@@ -4,9 +4,10 @@
   "description": "A port of LogiDice for sockbot. This is a straight perl-to-JS port. ",
   "main": "logiDice.js",
   "scripts": {
-    "test": "istanbul cover node_modules/mocha/bin/_mocha -- unitTest.js",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- unitTest.js",
-    "ci": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec unitTest.js && cat ./coverage/lcov.info  | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "test": "istanbul cover node_modules/mocha/bin/_mocha -- test/unitTest.js",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- test/unitTest.js -R dot",
+    "ci": "npm run coverage && npm run coveralls",
+    "coveralls": "cat ./coverage/lcov.info  | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "publish-please": "publish-please",
     "prepublish": "publish-please guard"
   },

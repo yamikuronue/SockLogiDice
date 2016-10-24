@@ -9,8 +9,8 @@ Chai.use(sinonChai);
 const Sinon = require('sinon');
 require('sinon-as-promised');
 
-const logiDice = require('./logiDice.js');
-const View = require('./view');
+const logiDice = require('../src/logiDice.js');
+const View = require('../src/view');
 
 describe('Logios Dice for SockBot', () => {
 	let sandbox = Sinon.sandbox.create();
@@ -490,7 +490,6 @@ describe('Logios Dice for SockBot', () => {
 			return logiDice.parse("5d10", logiDice.mode.WW).then((result) => {
 				expect(result.rolls).to.contain('5d10: 4 **8** **10** 7 **10** = 39');
 			});
-
 		});
 
 		it('should bold scion successes', () => {
@@ -614,7 +613,7 @@ describe('Logios Dice view', () => {
 			sandbox.restore();
 		});
 		
-		describe.only('formatOutput', () => {
+		describe('formatOutput', () => {
 			it('should trim trailing | ', () => {
 				const expected = 'You rolled: 1d20 || 1d20: 8 = 8 || Total: *8*';
 				const result = {
@@ -641,7 +640,7 @@ describe('Logios Dice view', () => {
 			});
 			
 			it('should trim trailing | in multiple recursion lines', () => {
-				const expected = 'You rolled: 2x1d20 || «1d20: 8 = 8» «1d20: 4 = 4» *Grand Total*: 12 || Total: *12*';
+				const expected = 'You rolled: 2x1d20 || «1d20: 8 = 8» | «1d20: 4 = 4» || Total: *12*';
 				const result = {
 					input: '2x1d20',
 					rolls: [
@@ -671,7 +670,7 @@ describe('Logios Dice view', () => {
 			});
 			
 			it('should trim trailing | in multiple recursion lineswith multiple rolls', () => {
-				const expected = 'You rolled: 2x1d20+2d4 || «1d20: 8 = 8 | 2d4 = 1 3» «1d20: 4 = 4 | 2d4 = 2 2» *Grand Total*: 20 || Total: *20*';
+				const expected = 'You rolled: 2x1d20+2d4 || «1d20: 8 = 8 | 2d4: 1 3 = 4» | «1d20: 4 = 4 | 2d4: 2 2 = 4» || Total: *20*';
 				const result = {
 					input: '2x1d20+2d4',
 					rolls: [
@@ -725,7 +724,7 @@ describe('Logios Dice view', () => {
 			sandbox.restore();
 		});
 		
-		describe.only('formatOutput', () => {
+		describe('formatOutput', () => {
 			it('should offer spoilers if supported', () => {
 				view.spoiler = true;
 				sandbox.spy(fakeForum.Format, 'spoiler');
@@ -750,7 +749,76 @@ describe('Logios Dice view', () => {
 					result: 8
 				};
 					
-				expect(view.formatOutput(result)).to.equal('You rolled 1d20\n\n1d20: 8 = 8\n\nTotal: *8*');
+				expect(view.formatOutput(result)).to.equal('You rolled 1d20\n\n1d20: 8 = 8\nTotal: *8*');
+			});
+			
+			it('should offer spoilers with recursion if supported', () => {
+				view.spoiler = true;
+				sandbox.spy(fakeForum.Format, 'spoiler');
+				const result = {
+					input: '2x1d20',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('1d20', [4], 4, logiDice.mode.SUM)
+						],
+					result: 12,
+					subQueries: [
+						{
+							input: '1d20',
+							rolls: [
+								view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+							],
+							result: 8
+						},
+						{
+							input: '1d20',
+							rolls: [
+								view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+							],
+							result: 4
+						}
+					]
+				};
+					
+				view.formatOutput(result);
+				expect(fakeForum.Format.spoiler).to.have.been.calledOnce;
+				const args = fakeForum.Format.spoiler.firstCall.args;
+				expect(args[0]).to.equal('*Your rolls*: \n*1d20*:\n- 1d20: 8 = 8\n\n*1d20*:\n- 1d20: 4 = 4\n\nTotal: *12*');
+				expect(args[1]).to.equal('You rolled 2x1d20: 12');
+			});
+			
+			it('should use multiple lines with recursion without spoilers', () => {
+				view.spoiler = false;
+				const result = {
+					input: '2x1d20+2d4',
+					rolls: [
+						view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+						view.formatRoll('2d4', [1,3], 4, logiDice.mode.SUM),
+						view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+						view.formatRoll('2d4', [2,2], 4, logiDice.mode.SUM),
+						],
+					result: 20,
+					subQueries: [
+						{
+							input: '1d20+2d4',
+							rolls: [
+								view.formatRoll('1d20', [8], 8, logiDice.mode.SUM),
+								view.formatRoll('2d4', [1,3], 4, logiDice.mode.SUM),
+							],
+							result: 11
+						},
+						{
+							input: '1d20+2d4',
+							rolls: [
+								view.formatRoll('1d20', [4], 4, logiDice.mode.SUM),
+								view.formatRoll('2d4', [2,2], 4, logiDice.mode.SUM),
+							],
+							result: 8
+						}
+					]
+				};
+					
+				expect(view.formatOutput(result)).to.equal('You rolled 2x1d20+2d4\n\n*1d20+2d4*:\n- 1d20: 8 = 8\n- 2d4: 1 3 = 4\n\n*1d20+2d4*:\n- 1d20: 4 = 4\n- 2d4: 2 2 = 4\n\nTotal: *20*');
 			});
 		});
 	});
