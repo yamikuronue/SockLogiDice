@@ -115,6 +115,17 @@ describe('Logios Dice for SockBot', () => {
 	            expect(output).to.equal('You rolled: ceil(1d6/2) || 1d6: 3 = 3 || Total: *2*');
 	        });
 	    });
+	    
+	    it('does math with f\'s', () => {
+	        command.args.push('floor(1d6/2)');
+	        sandbox.stub(Math, 'random').returns(3/6);
+	        
+	        return logiDice.onRoll(command).then(() => {
+	            expect(command.reply).to.have.been.calledOnce;
+	            const output = command.reply.firstCall.args[0];
+	            expect(output).to.equal('You rolled: floor(1d6/2) || 1d6: 3 = 3 || Total: *1*');
+	        });
+	    });
 
 	});
 	

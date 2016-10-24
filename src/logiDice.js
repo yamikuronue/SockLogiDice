@@ -88,7 +88,7 @@ module.exports = {
 			 */
 
 			 //Upgrade to Fate
-			if (input.toUpperCase().indexOf('F') > -1) {
+			if (input.indexOf('dF') > -1) {
 				mode = module.exports.mode.FATE;
 				input = input.replace(/[Ff]/g, '6');
 			}
