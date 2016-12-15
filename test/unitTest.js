@@ -14,7 +14,7 @@ const View = require('../src/view');
 
 describe('Logios Dice for SockBot', () => {
 	let sandbox = Sinon.sandbox.create();
-	
+
 	beforeEach(function() {
 		logiDice.view = new View({
 			Format: {
@@ -28,7 +28,7 @@ describe('Logios Dice for SockBot', () => {
 	afterEach(function() {
 		sandbox.restore();
 	});
-	
+
 	describe('Activate/plugin', () => {
 		const fakeForum = {
 			Commands: {
@@ -36,7 +36,7 @@ describe('Logios Dice for SockBot', () => {
 			},
 			supports: () => false
 		};
-		
+
 		it('Should activate commands', () => {
 			sandbox.spy(fakeForum.Commands, 'add');
 			logiDice.plugin(fakeForum).activate().then(() => {
@@ -105,6 +105,14 @@ describe('Logios Dice for SockBot', () => {
 			return expect(logiDice.roll("1d4000", logiDice.mode.SUM)).to.eventually.deep.equal({
 				rolls: [200],
 				result: 200
+			});
+		});
+
+		it('should behave sensibly with nonsensical input', () => {
+			sandbox.stub(Math, 'random').returns(0.5);
+			return expect(logiDice.roll('@index&zwnj;d@index', logiDice.mode.SUM)).to.eventually.deep.equal({
+				rolls: [],
+				result: 0
 			});
 		});
 
@@ -426,6 +434,14 @@ describe('Logios Dice for SockBot', () => {
 			})
 		});
 
+		it('should behave sensibly with nonsensical input', () => {
+			sandbox.stub(Math, 'random').returns(0.5);
+			return logiDice.parse('@index&zwnj;d@index', logiDice.mode.SUM).then((result) => {
+				expect(result.rolls).to.deep.equal([]);
+				expect(result.result).to.equal(0);
+			});
+		});
+
 		it('should auto-upgrade to Fate mode', () => {
 			sandbox.stub(logiDice, 'roll').resolves({
 				result: -2,
@@ -443,7 +459,7 @@ describe('Logios Dice for SockBot', () => {
 				result: 4,
 				rolls: [4]
 			});
-			
+
 			sandbox.stub(logiDice.view, 'formatOutput').returns('output');
 
 			return logiDice.parse("1d10", logiDice.mode.SUM).then((result) => {
@@ -615,7 +631,7 @@ describe('Logios Dice for SockBot', () => {
 describe('Logios Dice view', () => {
 	let sandbox = Sinon.sandbox.create();
 	let view;
-	
+
 	describe('single-line mode', () => {
 		before(function() {
 			view = new View({
@@ -625,13 +641,13 @@ describe('Logios Dice view', () => {
 				},
 				supports: (item) => false
 			});
-			view.multiline = false; 
+			view.multiline = false;
 		});
-	
+
 		afterEach(function() {
 			sandbox.restore();
 		});
-		
+
 		describe('formatOutput', () => {
 			it('should trim trailing | ', () => {
 				const expected = 'You rolled: 1d20 || 1d20: 8 = 8 || Total: *8*';
@@ -640,10 +656,10 @@ describe('Logios Dice view', () => {
 					rolls: [view.formatRoll('1d20', [8], 8, logiDice.mode.SUM)],
 					result: 8
 				};
-					
+
 				expect(view.formatOutput(result)).to.equal(expected);
 			});
-			
+
 			it('should trim trailing | in multiple lines', () => {
 				const expected = 'You rolled: 1d20+2d4 || 1d20: 8 = 8 | 2d4: 1 2 = 3 || Total: *11*';
 				const result = {
@@ -654,10 +670,10 @@ describe('Logios Dice view', () => {
 					],
 					result: 11
 				};
-					
+
 				expect(view.formatOutput(result)).to.equal(expected);
 			});
-			
+
 			it('should trim trailing | in multiple recursion lines', () => {
 				const expected = 'You rolled: 2x1d20 || «1d20: 8 = 8» | «1d20: 4 = 4» || Total: *12*';
 				const result = {
@@ -684,10 +700,10 @@ describe('Logios Dice view', () => {
 						}
 					]
 				};
-					
+
 				expect(view.formatOutput(result)).to.equal(expected);
 			});
-			
+
 			it('should trim trailing | in multiple recursion lineswith multiple rolls', () => {
 				const expected = 'You rolled: 2x1d20+2d4 || «1d20: 8 = 8 | 2d4: 1 3 = 4» | «1d20: 4 = 4 | 2d4: 2 2 = 4» || Total: *20*';
 				const result = {
@@ -718,13 +734,13 @@ describe('Logios Dice view', () => {
 						}
 					]
 				};
-					
+
 				expect(view.formatOutput(result)).to.equal(expected);
 			});
 		});
 	});
-	
-	
+
+
 	describe('multi-line mode', () => {
 		const fakeForum = {
 				Format: {
@@ -733,16 +749,16 @@ describe('Logios Dice view', () => {
 				},
 				supports: (item) => true
 			};
-			
+
 		before(function() {
 			view = new View(fakeForum);
-			view.multiline = true; 
+			view.multiline = true;
 		});
-	
+
 		afterEach(function() {
 			sandbox.restore();
 		});
-		
+
 		describe('formatOutput', () => {
 			it('should offer spoilers if supported', () => {
 				view.spoiler = true;
@@ -752,14 +768,14 @@ describe('Logios Dice view', () => {
 					rolls: [view.formatRoll('1d20', [8], 8, logiDice.mode.SUM)],
 					result: 8
 				};
-					
+
 				view.formatOutput(result);
 				expect(fakeForum.Format.spoiler).to.have.been.calledOnce;
 				const args = fakeForum.Format.spoiler.firstCall.args;
 				expect(args[0]).to.equal('*Your rolls*: \n1d20: 8 = 8\nTotal: *8*');
 				expect(args[1]).to.equal('You rolled 1d20: 8');
 			});
-			
+
 			it('should use multiple lines without spoilers if not supported', () => {
 				view.spoiler = false;
 				const result = {
@@ -767,10 +783,10 @@ describe('Logios Dice view', () => {
 					rolls: [view.formatRoll('1d20', [8], 8, logiDice.mode.SUM)],
 					result: 8
 				};
-					
+
 				expect(view.formatOutput(result)).to.equal('You rolled 1d20\n\n1d20: 8 = 8\nTotal: *8*');
 			});
-			
+
 			it('should offer spoilers with recursion if supported', () => {
 				view.spoiler = true;
 				sandbox.spy(fakeForum.Format, 'spoiler');
@@ -798,14 +814,14 @@ describe('Logios Dice view', () => {
 						}
 					]
 				};
-					
+
 				view.formatOutput(result);
 				expect(fakeForum.Format.spoiler).to.have.been.calledOnce;
 				const args = fakeForum.Format.spoiler.firstCall.args;
 				expect(args[0]).to.equal('*Your rolls*: \n*1d20*:\n- 1d20: 8 = 8\n\n*1d20*:\n- 1d20: 4 = 4\n\nTotal: *12*');
 				expect(args[1]).to.equal('You rolled 2x1d20: 12');
 			});
-			
+
 			it('should use multiple lines with recursion without spoilers', () => {
 				view.spoiler = false;
 				const result = {
@@ -836,7 +852,7 @@ describe('Logios Dice view', () => {
 						}
 					]
 				};
-					
+
 				expect(view.formatOutput(result)).to.equal('You rolled 2x1d20+2d4\n\n*1d20+2d4*:\n- 1d20: 8 = 8\n- 2d4: 1 3 = 4\n\n*1d20+2d4*:\n- 1d20: 4 = 4\n- 2d4: 2 2 = 4\n\nTotal: *20*');
 			});
 		});

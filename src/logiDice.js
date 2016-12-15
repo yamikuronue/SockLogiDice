@@ -14,7 +14,7 @@ module.exports = {
 		WW: 2,
 		SCION: 3
 	},
-	
+
 	/**
 	 * A result object
 	 * @typedef {Object} Result
@@ -73,13 +73,16 @@ module.exports = {
 			return Promise.all(recPromises).then((subQueries) => {
 				let diceResult = subQueries.reduce((tally, current, index) => {
 					return mergeResults(tally, current);
-				}, false);
+				}, {
+					rolls: [],
+					result: 0
+				});
 
 				/*Do math with order of operations*/
 				result.result = diceResult.result;
 				result.rolls = diceResult.rolls;
 				result.subQueries = subQueries;
-				
+
 				return result;
 			});
 		} else {
@@ -106,7 +109,7 @@ module.exports = {
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
 				result.rolls = diceResult.rolls;
-				
+
 				return result;
 			});
 		}
