@@ -443,6 +443,22 @@ describe('Logios Dice for SockBot', () => {
 			});
 		});
 
+		it('should behave sensibly with nonsensical recursive input', () => {
+			sandbox.stub(Math, 'random').returns(0.5);
+			return logiDice.parse('10x@index&zwnj;d@index', logiDice.mode.SUM).then((result) => {
+				expect(result.rolls).to.deep.equal([]);
+				expect(result.result).to.equal(0);
+			});
+		});
+		
+		it('should behave sensibly with nonsensical Fate input', () => {
+			sandbox.stub(Math, 'random').returns(0.5);
+			return logiDice.parse('10x@index&zwnj;dF', logiDice.mode.SUM).then((result) => {
+				expect(result.rolls).to.deep.equal([]);
+				expect(result.result).to.equal(0);
+			});
+		});
+
 		it('should auto-upgrade to Fate mode', () => {
 			sandbox.stub(logiDice, 'roll').resolves({
 				result: -2,

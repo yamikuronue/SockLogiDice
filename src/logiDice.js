@@ -54,6 +54,11 @@ module.exports = {
 			subQueries: false
 		};
 
+		const baseRolls = {
+			rolls: [],
+			result: 0
+		};
+
 		//Sanity check
 		if(!input.match(/[-+*/dX]/gi)) {
 			return Promise.resolve(result);
@@ -73,10 +78,7 @@ module.exports = {
 			return Promise.all(recPromises).then((subQueries) => {
 				let diceResult = subQueries.reduce((tally, current, index) => {
 					return mergeResults(tally, current);
-				}, {
-					rolls: [],
-					result: 0
-				});
+				}, baseRolls);
 
 				/*Do math with order of operations*/
 				result.result = diceResult.result;
@@ -95,7 +97,11 @@ module.exports = {
 				mode = module.exports.mode.FATE;
 				input = input.replace(/[Ff]/g, '6');
 			}
-			const diceItems = input.match(/\d+d\d+/g);
+			const diceItems = input.match(/\d+d\d+/g) || [];
+
+			if (diceItems.length === 0) { // We got unparseable query. Just let it go.
+				return Promise.resolve(result);
+			}
 
 			let dicePromises = diceItems.map((current) => { return module.exports.roll(current, mode)});
 
@@ -104,7 +110,7 @@ module.exports = {
 					input = input.replace(diceItems[index], current.result);
 					current.rolls = [module.exports.view.formatRoll(diceItems[index], current.rolls, current.result, mode)];
 					return mergeResults(tally, current);
-				}, false);
+				}, baseRolls);
 
 				/*Do math with order of operations*/
 				result.result = Mathjs.eval(input);
