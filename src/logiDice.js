@@ -35,9 +35,6 @@ module.exports = {
 	 */
 	parse: (input, mode) => {
 		function mergeResults(res1, res2) {
-			if (!res1) {
-				return res2
-			}
 
 			const retval = {
 				result: res1.result + res2.result,
