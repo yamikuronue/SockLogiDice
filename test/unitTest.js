@@ -39,7 +39,7 @@ describe('Logios Dice for SockBot', () => {
 		
 		it('Should activate commands', () => {
 			sandbox.spy(fakeForum.Commands, 'add');
-			logiDice.plugin(fakeForum).activate().then(() => {
+			return logiDice.plugin(fakeForum).activate().then(() => {
 				fakeForum.Commands.add.should.be.calledWith('roll');
 				fakeForum.Commands.add.should.be.calledWith('rollww');
 				fakeForum.Commands.add.should.be.calledWith('rollscion');
