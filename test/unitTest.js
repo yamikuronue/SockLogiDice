@@ -2,13 +2,14 @@
 const Chai = require('chai');
 const expect = Chai.expect;
 const chaiAsPromised = require("chai-as-promised");
+const sinonChai = require("sinon-chai");
+
 Chai.use(chaiAsPromised);
+Chai.use(sinonChai);
+Chai.should();
 
 const Sinon = require('sinon');
 require('sinon-as-promised');
-
-const sinonChai = require("sinon-chai");
-Chai.use(sinonChai);
 
 const logiDice = require('../src/logiDice.js');
 const View = require('../src/view');
@@ -41,10 +42,10 @@ describe('Logios Dice for SockBot', () => {
 		it('Should activate commands', () => {
 			sandbox.spy(fakeForum.Commands, 'add');
 			return logiDice.plugin(fakeForum).activate().then(() => {
-				expect(fakeForum.Commands.add.calledWith('roll')).to.equal(true);
-				expect(fakeForum.Commands.add.calledWith('rollww')).to.equal(true);
-				expect(fakeForum.Commands.add.calledWith('rollscion')).to.equal(true);
-				expect(fakeForum.Commands.add.calledWith('rollfate')).to.equal(true);
+				fakeForum.Commands.add.should.be.calledWith('roll');
+				fakeForum.Commands.add.should.be.calledWith('rollww');
+				fakeForum.Commands.add.should.be.calledWith('rollscion');
+				fakeForum.Commands.add.should.be.calledWith('rollfate');
 			});
 		});
 	});
