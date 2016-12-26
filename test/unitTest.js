@@ -5,6 +5,7 @@ const chaiAsPromised = require("chai-as-promised");
 const sinonChai = require("sinon-chai");
 Chai.use(chaiAsPromised);
 Chai.use(sinonChai);
+Chai.should();
 
 const Sinon = require('sinon');
 require('sinon-as-promised');
