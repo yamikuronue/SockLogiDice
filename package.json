@@ -2,7 +2,7 @@
   "name": "sock-logidice",
   "version": "1.2.0",
   "description": "A port of LogiDice for sockbot. This is a straight perl-to-JS port. ",
-  "main": "logiDice.js",
+  "main": "src/logiDice.js",
   "scripts": {
     "test": "istanbul cover node_modules/mocha/bin/_mocha -- test/unitTest.js && npm run integration",
     "integration": "mocha test/integrationTest.js",
