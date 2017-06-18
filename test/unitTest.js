@@ -24,7 +24,7 @@ describe('Logios Dice for SockBot', () => {
 				spoiler: (body, summary) => `${summary} : ${body}`
 			},
 			supports: (item) => true
-		});
+		}, {});
 	});
 
 	afterEach(function() {
@@ -41,12 +41,16 @@ describe('Logios Dice for SockBot', () => {
 
 		it('Should activate commands', () => {
 			sandbox.spy(fakeForum.Commands, 'add');
-			return logiDice.plugin(fakeForum).activate().then(() => {
+			return logiDice.plugin(fakeForum, {}).activate().then(() => {
 				fakeForum.Commands.add.should.be.calledWith('roll');
 				fakeForum.Commands.add.should.be.calledWith('rollww');
 				fakeForum.Commands.add.should.be.calledWith('rollscion');
 				fakeForum.Commands.add.should.be.calledWith('rollfate');
 			});
+		});
+		
+		it('Should provide default config', () => {
+			return logiDice.plugin(fakeForum, {}).config.spoilers.should.be.false;
 		});
 	});
 
@@ -151,6 +155,7 @@ describe('Logios Dice for SockBot', () => {
 			});
 		});
 	});
+
 	describe('Roll() in white wolf mode', () => {
 		/*
 			White Wolf mode rolls a d10,
@@ -189,6 +194,7 @@ describe('Logios Dice for SockBot', () => {
 			});
 		});
 	});
+
 	describe('Roll() in scion mode', () => {
 		/*
 			Scion mode is like White wolf dice, for the most part
@@ -576,7 +582,7 @@ describe('Logios Dice for SockBot', () => {
 				expect(fakeCommand.reply.called).to.equal(true);
 
 				const output = fakeCommand.reply.firstCall.args[0];
-				expect(output).to.include("You rolled 1d10:");
+				expect(output).to.include("You rolled 1d10");
 				expect(output).to.contain('1d10: 4 = 4');
 			})
 
@@ -767,14 +773,29 @@ describe('Logios Dice view', () => {
 				},
 				supports: (item) => true
 			};
+			
+		const fakeForumNoSpoilers = {
+				Format: {
+					bold: (input) => `*${input}*`,
+					spoiler: (body, summary) => `${summary} : ${body}`
+				},
+				supports: (item) => false
+		}
 
 		before(function() {
-			view = new View(fakeForum);
+			view = new View(fakeForum, {});
 			view.multiline = true;
 		});
 
 		afterEach(function() {
 			sandbox.restore();
+		});
+		
+		describe('configuration', () => {
+			it('should turn on spoilers if supported and enabled', () => new View(fakeForum, {spoilers: true}).spoiler.should.equal(true));
+			it('should turn off spoilers if supported but not enabled', () => new View(fakeForum, {spoilers: false}).spoiler.should.equal(false));
+			it('should turn off spoilers if not supported but enabled', () => new View(fakeForumNoSpoilers, {spoilers: true}).spoiler.should.equal(false));
+			it('should turn off spoilers if not supported and not enabled', () => new View(fakeForumNoSpoilers, {spoilers: false}).spoiler.should.equal(false));
 		});
 
 		describe('formatOutput', () => {
