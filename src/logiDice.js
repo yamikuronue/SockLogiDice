@@ -282,7 +282,17 @@ module.exports = {
 		});
 	},
 
-	plugin: function(forum) {
+	plugin: function(forum, config) {
+		
+		const defaultConfig = {
+			spoilers: false
+		};
+		
+		Object.keys(defaultConfig).forEach((key) => {
+			if (!config[key]) {
+				config[key] = defaultConfig[key];
+			}
+		});
 
 		/**
 	     * Activate the plugin.
@@ -292,16 +302,18 @@ module.exports = {
 	     * @returns {Promise} Resolves when plugin is fully activated     *
 	     */
 	    function activate() {
-	    	module.exports.view = new View(forum);
+	    	module.exports.view = new View(forum, config);
+	    	
 	        return forum.Commands.add('roll', 'Roll some dice', module.exports.onRoll)
 	        		.then(() => forum.Commands.add('rollww', 'Roll dice for White Wolf games', module.exports.onWW))
 	        		.then(() => forum.Commands.add('rollscion', 'Roll dice for Scion', module.exports.onScion))
-	        		.then(() => forum.Commands.add('rollfate', 'Roll dice for Fate', module.exports.onFate))
+	        		.then(() => forum.Commands.add('rollfate', 'Roll dice for Fate', module.exports.onFate));
 	    }
 
 	    return {
 	        activate: activate,
-	        deactivate: () => {}
+	        deactivate: () => {},
+	        config: config
 	    };
 	}
-}
+};

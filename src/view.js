@@ -14,10 +14,10 @@ const MODE = {
 };
 
 class View {
-    constructor (forum) {
+    constructor (forum, config) {
         this.formatter = forum.Format;
         this.multiline = forum.supports('Formatting.Multiline');
-        this.spoiler = forum.supports('Formatting.Spoilers');
+        this.spoiler = forum.supports('Formatting.Spoilers') && config.spoilers;
     }
     
     formatRoll(dice, rolls, result, mode) {

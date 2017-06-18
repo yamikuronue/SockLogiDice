@@ -26,7 +26,7 @@ describe('Logios Dice for SockBot', () => {
 	let command, sandbox;
 
 	before(() => {
-	    logiDice.plugin(fakeForum).activate();
+	    logiDice.plugin(fakeForum, {spoilers: true}).activate();
 	});
 
 	beforeEach(() => {
